@@ -1,0 +1,1 @@
+SELECT h.id as 'hallid', z.sector as 'zname', hp.zone as 'zone_id', hp.x, hp.y, hp.width, hp.height, hp.text FROM hall h JOIN zone z ON z.hall = h.id JOIN hallplace hp ON hp.zone = z.id WHERE h.id = 24;

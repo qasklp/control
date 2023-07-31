@@ -1,0 +1,105 @@
+<?php
+
+	$servername = "localhost";
+	$username = "root";
+	$password = "root";
+	$dbname = "control_tickets";	
+	
+	$code =  $_POST['code'];
+	$event =  $_POST['event'];
+	$flag = false;
+	$zone = '';
+	$row = '';
+	$col = '';
+	$zzone = '';
+	
+	
+	$mysqli = new mysqli($servername, $username, $password, $dbname);
+	if ($mysqli->connect_errno) {
+		echo "Не удалось подключиться к MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+	}
+	
+	$sql = "SELECT * FROM event e WHERE e.IsActive = 1";
+	if($result = $mysqli->query($sql)){
+    //$rowsCount = $result->num_rows; // количество полученных строк
+    //echo "<p>Получено объектов: $rowsCount</p>";
+    //echo "<table><tr><th>Id</th><th>Имя</th><th>Возраст</th></tr>";
+    foreach($result as $row2){
+        $code2 = $row2["barcode"];
+		//echo $code2;
+		/*echo "<pre>";
+		var_dump($row2);
+		echo "</pre>";*/
+	if($code == $code2 && $event == $row2["event"]){
+			
+			$zone = $row2["sector"];
+		$row = $row2["row"];
+		$col = $row2["col"];
+			$flag = true;
+	  }
+	//echo '[{"zone":'.$zone.',"row":'.$row.',"col":'.$col.'}]';
+    }
+   // echo "</table>";
+    $result->free();
+} else{
+    echo "Ошибка: " . $mysqli->error;
+}
+
+	
+
+
+$sql2 = "SELECT * FROM event";
+//echo $sql;
+	/*if($result = $mysqli->query($sql)){
+		
+		 foreach($result as $row){
+			echo $row;
+			$zzone = $row['zone'];
+		 }
+		 //$result->free();
+	}else{
+		echo "Ошибка: " . $mysqli->error;
+	}*/
+$mysqli->close();	
+	
+if ($flag){
+	echo '[{"zone":"'.$zone.'","row":'.$row.',"col":'.$col.'}]';
+}else{
+	echo "1";
+}
+
+/*	
+switch ($_REQUEST['action']) {
+    case 'sample1':
+        echo 'Пример 1 - передача завершилась успешно';
+        break;
+    case 'sample2':
+        echo 'Пример 2 - передача завершилась успешно. Параметры: code = ' . $code.' - '. $code2;
+        break;
+    case 'sample3':
+        echo "$('.results').html('Пример 3 - Выполнение JavaScript');";
+        break;
+    case 'sample4':
+        header ('Content-Type: application/xml; charset=UTF-8');
+
+        echo <<<XML
+<?xml version='1.0' standalone='yes'?>
+<items>
+<item>Пункт 1</item>
+<item>Пункт 2</item>
+<item>Пункт 3</item>
+<item>Пункт 4</item>
+<item>Пункт 5</item>
+</items>
+XML;
+        break;
+    case 'sample5':
+        $aRes = array('name' => 'Andrew', 'nickname' => 'Aramis');
+
+        require_once('Services_JSON.php');
+        $oJson = new Services_JSON();
+        echo $oJson->encode($aRes);
+        break;
+}
+*/
+?>

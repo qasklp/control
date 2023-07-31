@@ -1,0 +1,139 @@
+<?php
+
+// Статусы для scanlog 0 - нет в базе; 1 - вход в зал; 2 - повторный вход; 3-выход из зала; 4 - не та зона 
+// Статусы для eventplace 0 - не сканировался; 1 - в зале;
+
+	$servername = "localhost";
+	$username = "root";
+	$password = "root";
+	$dbname = "control_tickets";	
+	
+	$code =  $_POST['code'];
+	$event =  $_POST['event'];
+	$time = '2022-01-01 00:00:00';
+	$flag = false;
+	$status = 0;
+	$eventplace_id = 0;
+	$zone = '';
+	$row = '';
+	$col = '';
+	$zzone = '';
+	
+	
+	$mysqli = new mysqli($servername, $username, $password, $dbname);
+	if ($mysqli->connect_errno) {
+		echo "Не удалось подключиться к MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
+	}
+	
+	$sql = "SELECT e.id as 'eid', z.id as 'zid', z.sector as 'sector', e.row as 'row', e.col as 'col', e.barcode as 'barcode', e.event as 'event', e.status as 'status' FROM eventplace e JOIN zone z ON z.id = e.zone";
+	if($result = $mysqli->query($sql)){
+    //$rowsCount = $result->num_rows; // количество полученных строк
+    //echo "<p>Получено объектов: $rowsCount</p>";
+    //echo "<table><tr><th>Id</th><th>Имя</th><th>Возраст</th></tr>";
+	//var_dump($result);
+	foreach($result as $row2){
+        //echo '<pre>';
+		//var_dump($row2);
+		//echo '</pre>';		
+		$code2 = $row2["barcode"];
+		//echo $code;
+		/*echo "<pre>";
+		var_dump($row2);
+		echo "</pre>";*/
+	if($code == $code2 && $event == $row2["event"]){
+		$eventplace_id = $row2["eid"];
+		$zone = $row2["sector"];
+		$row = $row2["row"];
+		$col = $row2["col"];
+		$status = $row2["status"];
+		$flag = true;
+		//echo "**********";
+	  }
+	//echo '[{"zone":'.$zone.',"row":'.$row.',"col":'.$col.'}]';
+    }
+   // echo "</table>";
+   
+    $result->free();
+} else{
+    echo "Ошибка: " . $mysqli->error;
+}
+
+
+
+
+$sql2 = "SELECT * FROM event";
+//echo $sql;
+	/*if($result = $mysqli->query($sql)){
+		
+		 foreach($result as $row){
+			echo $row;
+			$zzone = $row['zone'];
+		 }
+		 //$result->free();
+	}else{
+		echo "Ошибка: " . $mysqli->error;
+	}*/
+
+	
+if ($flag){
+	if($status == 0){//вход в зал
+		$mysqli->query("INSERT INTO scanlog (`id`,`event`, `eventplace`, `barcode`, `time`, `status`, `user`) VALUES (NULL, {$event},{$eventplace_id},'{$code}', NOW(), 1, 1)");
+		$mysqli->query("UPDATE eventplace e SET e.status = 1 WHERE e.id = {$eventplace_id}");
+		echo '[{"zone":"'.$zone.'","row":'.$row.',"col":'.$col.',"time":"'.$time.'"}]';
+	}
+	
+	if($status == 1){//повторный вход
+		$mysqli->query("INSERT INTO scanlog (`id`,`event`, `eventplace`, `barcode`, `time`, `status`, `user`) VALUES (NULL, {$event},{$eventplace_id},'{$code}', NOW(), 2, 1)");
+		$sql2 = "SELECT s.time as 'time' FROM scanlog s WHERE s.eventplace = {$eventplace_id} AND s.status = 1";
+		echo $sql2;
+		if($result2 = $mysqli->query($sql2)){
+			foreach($result2 as $row2)
+				$time = $row2["time"];
+			 //$result->free();
+		}else{
+				echo "Ошибка: " . $mysqli->error;
+			}
+		
+		//$result->free();
+		echo '[{"zone":"'.$zone.'","row":'.$row.',"col":'.$col.',"time":"'.$time.'"}]';
+	}
+}else{
+	$mysqli->query("INSERT INTO scanlog (`id`, `event`, `eventplace`, `barcode`, `time`, `status`, `user`) VALUES (NULL, {$event}, {$eventplace_id},'{$code}', NOW(), 0, 1)");
+	echo "1";
+}
+$mysqli->close();
+/*	
+switch ($_REQUEST['action']) {
+    case 'sample1':
+        echo 'Пример 1 - передача завершилась успешно';
+        break;
+    case 'sample2':
+        echo 'Пример 2 - передача завершилась успешно. Параметры: code = ' . $code.' - '. $code2;
+        break;
+    case 'sample3':
+        echo "$('.results').html('Пример 3 - Выполнение JavaScript');";
+        break;
+    case 'sample4':
+        header ('Content-Type: application/xml; charset=UTF-8');
+
+        echo <<<XML
+<?xml version='1.0' standalone='yes'?>
+<items>
+<item>Пункт 1</item>
+<item>Пункт 2</item>
+<item>Пункт 3</item>
+<item>Пункт 4</item>
+<item>Пункт 5</item>
+</items>
+XML;
+        break;
+    case 'sample5':
+        $aRes = array('name' => 'Andrew', 'nickname' => 'Aramis');
+
+        require_once('Services_JSON.php');
+        $oJson = new Services_JSON();
+        echo $oJson->encode($aRes);
+        break;
+}
+*/
+?>

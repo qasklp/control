@@ -1,0 +1,8 @@
+<?php
+
+	$servername = control;
+	$username = "control_tickets";
+	$password = "A77_leo_88a";
+	$dbname = "control_tickets";	
+	
+?>
